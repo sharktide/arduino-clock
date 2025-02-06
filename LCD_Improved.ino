@@ -2,7 +2,7 @@
 #include <RTClib.h>
 #include <LiquidCrystal.h>
 #include <dht_nonblocking.h>
-#include "pin_mappings.h"  // Include pin mappings header
+#include <pin_mappings.h>  // Include pin mappings header
 
 #define DHT_SENSOR_TYPE DHT_TYPE_11
 DHT_nonblocking dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
