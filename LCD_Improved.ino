@@ -2,6 +2,7 @@
 #include <RTClib.h>
 #include <LiquidCrystal.h>
 #include <dht_nonblocking.h>
+#include <IRremote.h>
 #include "pinmappings.h"  // Include pin mappings header
 
 #define DHT_SENSOR_TYPE DHT_TYPE_11
@@ -11,10 +12,17 @@ DHT_nonblocking dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
 RTC_DS1307 rtc;
 LiquidCrystal lcd(LCD_RS, LCD_ENABLE, LCD_D4, LCD_D5, LCD_D6, LCD_D7);
 
+/*-----( Declare objects )-----*/
+IRrecv irrecv(receiver);     // create instance of 'irrecv'
+decode_results results;      // create instance of 'decode_results'
+
+/*-----( Function )-----*/
+
+
 void setup() {
   // Start Serial communication
   Serial.begin(9600);
-
+  pinmode(lamp, OUTPUT)
   // Initialize LCD
   lcd.begin(16, 2);
   lcd.setCursor(0, 0);
@@ -35,6 +43,8 @@ void setup() {
     lcd.print("RTC is NOT running!");
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));  // Set RTC time to compile time
   }
+
+  irrecv.enableIRIn();
 
   // Clear LCD after initialization
   lcd.clear();
@@ -65,6 +75,13 @@ void loop() {
       printTime();
     }
   }
+
+  if (irrecv.decode(&results)) // have we received an IR signal?
+
+  {
+    translateIR(); 
+    irrecv.resume(); // receive the next value
+  }  
 
   // Continuously display the time (no need for further serial messages)
   printTime();
@@ -143,4 +160,41 @@ static bool measure_environment( float *temperature, float *humidity )
   }
   Serial.println("Not working :(");
   return( false );
+}
+
+void translateIR()  {
+
+  switch(results.value)
+
+  {
+  case 0xFFA25D: Serial.println("POWER"); break;
+  case 0xFFE21D: Serial.println("FUNC/STOP"); break;
+  case 0xFF629D: Serial.println("VOL+"); break;
+  case 0xFF22DD: Serial.println("FAST BACK");    break;
+  case 0xFF02FD: Serial.println("PAUSE");    break;
+  case 0xFFC23D: Serial.println("FAST FORWARD");   break;
+  case 0xFFE01F: Serial.println("DOWN");    break;
+  case 0xFFA857: Serial.println("VOL-");    break;
+  case 0xFF906F: Serial.println("UP");    break;
+  case 0xFF9867: Serial.println("EQ");    break;
+  case 0xFFB04F: Serial.println("ST/REPT");    break;
+  case 0xFF6897: Serial.println("0"); digitalWrite(lamp, HIGH);    break;
+  case 0xFF30CF: Serial.println("1"); digitalWrite(lamp, LOW);    break;
+  case 0xFF18E7: Serial.println("2");    break;
+  case 0xFF7A85: Serial.println("3");    break;
+  case 0xFF10EF: Serial.println("4");    break;
+  case 0xFF38C7: Serial.println("5");    break;
+  case 0xFF5AA5: Serial.println("6");    break;
+  case 0xFF42BD: Serial.println("7");    break;
+  case 0xFF4AB5: Serial.println("8");    break;
+  case 0xFF52AD: Serial.println("9");    break;
+  case 0xFFFFFFFF: Serial.println(" REPEAT");break;  
+
+  default: 
+    Serial.println(" other button   ");
+
+  }// End Case
+
+
+
 }
